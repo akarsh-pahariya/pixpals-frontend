@@ -88,7 +88,7 @@ const ProfileForm = ({
           )}
         </ProfileInfoItem>
 
-        {!isEditing && (
+        {!isEditing && user.authProvider !== 'google' && (
           <button
             type="button"
             onClick={showPasswordModal}

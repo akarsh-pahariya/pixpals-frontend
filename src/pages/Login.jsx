@@ -11,6 +11,8 @@ import {
   setIsLoadingToFalse,
   setIsLoadingToTrue,
 } from '../store/slices/loadingSlice';
+import { GoogleLogin } from '@react-oauth/google';
+import { useGoogleAuthHandlers } from '../hooks/useGoogleAuthHandlers';
 
 const Login = () => {
   useAuth();
@@ -21,6 +23,9 @@ const Login = () => {
   const isLoggedIn = useSelector((state) => state.user.isLoggedIn);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const { handleGoogleLoginSuccess, handleGoogleLoginError } =
+    useGoogleAuthHandlers();
 
   useEffect(() => {
     if (isLoggedIn) navigate('/dashboard');
@@ -66,6 +71,7 @@ const Login = () => {
               className="w-full pl-10 pr-4 py-3 bg-[#121212] text-white border border-[#2A2A2A] rounded-lg focus:ring-2 focus:ring-[#4C1D95] focus:outline-none transition-all placeholder-gray-500"
               placeholder="Username"
               onChange={(e) => setUsername(e.target.value)}
+              value={username}
             />
           </div>
 
@@ -78,6 +84,7 @@ const Login = () => {
               type={isPasswordVisible ? 'text' : 'password'}
               placeholder="Password"
               onChange={(e) => setPassword(e.target.value)}
+              value={password}
             />
             <button
               type="button"
@@ -106,6 +113,20 @@ const Login = () => {
             </div>
           </button>
         </form>
+
+        <div className="mt-6 flex flex-col items-center">
+          <div className="relative flex py-5 items-center w-full">
+            <div className="flex-grow border-t border-gray-700"></div>
+            <span className="flex-shrink mx-4 text-gray-500 text-sm">
+              Or continue with
+            </span>
+            <div className="flex-grow border-t border-gray-700"></div>
+          </div>
+          <GoogleLogin
+            onSuccess={handleGoogleLoginSuccess}
+            onError={handleGoogleLoginError}
+          />
+        </div>
 
         <div className="flex items-center justify-center gap-3 mt-6">
           <p className="text-gray-400 text-sm">New here?</p>

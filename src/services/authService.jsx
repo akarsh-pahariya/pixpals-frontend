@@ -146,3 +146,27 @@ export const userResetsPassword = async (token, password) => {
     }
   }
 };
+
+export const googleLogin = async (googleResponseToken) => {
+  try {
+    const response = await axios.post(
+      `${USER_API_URL}/google-login`,
+      {
+        token: googleResponseToken,
+      },
+      { withCredentials: true }
+    );
+    return response.data;
+  } catch (error) {
+    if (error.response) {
+      throw new Error(
+        error.response.data.message ||
+          'Google Login is not working right now, please try again'
+      );
+    } else if (error.request) {
+      throw new Error('Unable to reach the server. Please try again.');
+    } else {
+      throw new Error('Something went wrong. Please try again.');
+    }
+  }
+};

@@ -14,7 +14,6 @@ const useGroupUploads = (groupId, cursor, loadMore) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    console.log('Request made');
     if (loadMore === false && cursor !== null) return;
     dispatch(setIsLoadingToTrue());
     const getImagesOfGroup = async () => {

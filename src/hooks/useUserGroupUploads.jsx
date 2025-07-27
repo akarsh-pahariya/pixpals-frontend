@@ -27,7 +27,7 @@ const useUserGroupUploads = (groupId, pageNumber) => {
     fetchData();
   }, [fetchData]);
 
-  return { data, refetch: fetchData }; // Return both data and refetch function
+  return { data, refetch: fetchData };
 };
 
 export default useUserGroupUploads;

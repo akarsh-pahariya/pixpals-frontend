@@ -10,6 +10,7 @@ const ImageGrid = ({ imageData, openImageViewer }) => {
           key={image._id}
           className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700 shadow-lg shadow-purple-500/10 transform transition-all duration-300 hover:scale-102 hover:shadow-purple-500/20 cursor-pointer"
           onClick={() => openImageViewer(index)}
+          id={`image-${image._id}`}
         >
           <img
             src={image.secureURL}

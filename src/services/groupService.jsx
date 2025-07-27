@@ -40,14 +40,15 @@ export const createGroup = async (groupDetails) => {
   }
 };
 
-export const getGroupImages = async (groupId, pageNumber) => {
+export const getGroupImages = async (groupId, cursor) => {
   try {
-    const response = await axios.get(
-      `${API_URL}/group/${groupId}/image?page=${pageNumber}`,
-      {
-        withCredentials: true,
-      }
-    );
+    const url = cursor
+      ? `${API_URL}/group/${groupId}/image?cursor=${cursor}`
+      : `${API_URL}/group/${groupId}/image`;
+
+    const response = await axios.get(url, {
+      withCredentials: true,
+    });
     return response.data;
   } catch (error) {
     if (error.response) {

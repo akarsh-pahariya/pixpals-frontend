@@ -91,7 +91,8 @@ const GroupUploads = () => {
       prev ? [...prev, ...responseData.images] : responseData.images
     );
     setLoadMore(false);
-    setFirstNewImage(responseData.images[0]._id);
+    if (responseData.images.length > 0)
+      setFirstNewImage(responseData.images[0]._id);
 
     if (scrollAfterLoad) {
       setTimeout(() => {

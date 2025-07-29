@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Link, useParams, useNavigate, useLocation } from 'react-router-dom';
 import { useDispatch, useSelector } from 'react-redux';
 import Spinner from '../components/ui/Spinner';
@@ -14,13 +14,19 @@ import LeaveOrDeleteGroupButton from '../components/group uploads/LeaveOrDeleteG
 import DeleteGroupModal from '../components/group uploads/DeleteGroupModal';
 import useIsAdmin from '../hooks/useIsAdmin';
 import { deleteGroup, leaveGroup } from '../services/groupService';
-import { showErrorToast, showSuccessToast } from '../components/ui/Toast';
+import {
+  showDefaultToast,
+  showErrorToast,
+  showSuccessToast,
+} from '../components/ui/Toast';
 import { setRefreshGroupsToTrue } from '../store/slices/groupSlice';
 import {
   setIsLoadingToFalse,
   setIsLoadingToTrue,
 } from '../store/slices/loadingSlice';
 import LoadMoreButton from '../components/group uploads/LoadMoreButton';
+import useGroupSocket from '../hooks/useGroupSocket';
+import { useRef } from 'react';
 
 const GroupUploads = () => {
   useAuth();
@@ -28,19 +34,20 @@ const GroupUploads = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
+  const firstNewImageRef = useRef(null);
   const { groupId } = useParams();
-  const scrollRef = useRef(null);
   const groupDetails = useSelector((state) => state.group);
   const [cursor, setCursor] = useState(null);
   const [hasMore, setHasMore] = useState(null);
   const [loadMore, setLoadMore] = useState(false);
   const [totalImages, setTotalImages] = useState(null);
-  const [imageData, setImageData] = useState(null);
+  const [firstNewImage, setFirstNewImage] = useState(null);
+  const [imageData, setImageData] = useState([]);
   const [selectedImageIndex, setSelectedImageIndex] = useState(null);
   const [showLeaveModal, setShowLeaveModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [scrollAfterLoad, setScrollAfterLoad] = useState(false);
   const loading = useSelector((state) => state.loading.isLoading);
-  const api_response = useGroupUploads(groupId, cursor, loadMore);
   const currentGroup = groupDetails.groupsList
     ? groupDetails.groupsList.find(
         (group) => group.id === groupId || group.id === parseInt(groupId, 10)
@@ -48,29 +55,55 @@ const GroupUploads = () => {
     : null;
   const isAdmin = useIsAdmin(currentGroup);
 
-  useEffect(() => {
-    if (api_response) {
-      if (loadMore && imageData && imageData.length > 0) {
-        const lastOldImageId = imageData[imageData.length - 1]._id; // or .id
-        scrollRef.current = document.getElementById(`image-${lastOldImageId}`);
-      }
-
-      setCursor(api_response.nextCursor);
-      setHasMore(api_response.hasMore);
-      setTotalImages(api_response.totalImages);
-      setImageData((prev) =>
-        prev ? [...prev, ...api_response.images] : api_response.images
-      );
-      setLoadMore(false);
+  const onImagesUploaded = (eventListenData) => {
+    if (eventListenData.hasMore === false) {
+      setHasMore(eventListenData.hasMore);
+      setImageData(eventListenData.images);
+      setCursor(eventListenData.cursor);
+      setTotalImages(eventListenData.totalImages);
+    } else {
+      setImageData((prevImages) => [...eventListenData.images, ...prevImages]);
+      setTotalImages(eventListenData.totalImages);
     }
-  }, [api_response]);
+    showSuccessToast(
+      `${eventListenData.images[0].userId.name} has posted ${eventListenData.images.length} images`
+    );
+  };
 
-  useEffect(() => {
-    if (!loadMore && scrollRef.current) {
-      scrollRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      scrollRef.current = null;
+  const onImagesDeleted = (eventListenData) => {
+    const deletedIds = eventListenData.imagesDeleted;
+    setImageData((prevImages) =>
+      prevImages.filter((img) => !deletedIds.includes(img._id))
+    );
+    setTotalImages(eventListenData.totalImages);
+
+    showDefaultToast(
+      `${eventListenData.deletedBy.username} has deleted ${eventListenData.imagesDeleted.length} images`
+    );
+  };
+  useGroupSocket(groupId, onImagesUploaded, onImagesDeleted);
+
+  const onMoreImages = (responseData) => {
+    setCursor(responseData.nextCursor);
+    setHasMore(responseData.hasMore);
+    setTotalImages(responseData.totalImages);
+    setImageData((prev) =>
+      prev ? [...prev, ...responseData.images] : responseData.images
+    );
+    setLoadMore(false);
+    setFirstNewImage(responseData.images[0]._id);
+
+    if (scrollAfterLoad) {
+      setTimeout(() => {
+        firstNewImageRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+      }, 0);
     }
-  }, [imageData]);
+    setScrollAfterLoad(true);
+  };
+  useGroupUploads(groupId, cursor, loadMore, onMoreImages);
 
   const handleViewGroupDetails = () => {
     navigate(`/group/${groupId}/details`);
@@ -178,7 +211,12 @@ const GroupUploads = () => {
         </div>
 
         {imageData.length > 0 ? (
-          <ImageGrid imageData={imageData} openImageViewer={openImageViewer} />
+          <ImageGrid
+            imageData={imageData}
+            openImageViewer={openImageViewer}
+            firstNewImage={firstNewImage}
+            firstNewImageRef={firstNewImageRef}
+          />
         ) : (
           <EmptyState handlePostImage={handlePostImage} />
         )}

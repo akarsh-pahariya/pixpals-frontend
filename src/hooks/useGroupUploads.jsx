@@ -8,8 +8,7 @@ import {
   setIsLoadingToTrue,
 } from '../store/slices/loadingSlice';
 
-const useGroupUploads = (groupId, cursor, loadMore) => {
-  const [data, setData] = useState(null);
+const useGroupUploads = (groupId, cursor, loadMore, onMoreImages) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -19,7 +18,7 @@ const useGroupUploads = (groupId, cursor, loadMore) => {
     const getImagesOfGroup = async () => {
       try {
         const response = await getGroupImages(groupId, cursor);
-        setData(response.data);
+        onMoreImages(response.data);
       } catch (error) {
         showErrorToast(error.message);
         navigate('/dashboard');
@@ -30,8 +29,6 @@ const useGroupUploads = (groupId, cursor, loadMore) => {
 
     getImagesOfGroup();
   }, [groupId, loadMore, dispatch, navigate]);
-
-  return data;
 };
 
 export default useGroupUploads;

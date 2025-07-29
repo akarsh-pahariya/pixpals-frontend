@@ -1,7 +1,13 @@
 import { useEffect, useRef } from 'react';
 import { io } from 'socket.io-client';
 
-const useGroupSocket = (groupId, onImagesUploaded, onImagesDeleted) => {
+const useGroupSocket = (
+  groupId,
+  onImagesUploaded,
+  onImagesDeleted,
+  onGroupLeft,
+  onGroupDelete
+) => {
   const socketRef = useRef(null);
   const BACKEND_URL = `${import.meta.env.VITE_BASE_BACKEND_URL}`;
 
@@ -19,6 +25,14 @@ const useGroupSocket = (groupId, onImagesUploaded, onImagesDeleted) => {
 
     socketRef.current.on('imagesUploaded', (data) => {
       onImagesUploaded(data);
+    });
+
+    socketRef.current.on('groupLeft', (data) => {
+      onGroupLeft(data);
+    });
+
+    socketRef.current.on('groupDelete', (data) => {
+      onGroupDelete(data);
     });
 
     socketRef.current.on('imagesDeleted', (data) => {

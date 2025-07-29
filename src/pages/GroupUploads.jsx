@@ -81,7 +81,23 @@ const GroupUploads = () => {
       `${eventListenData.deletedBy.username} has deleted ${eventListenData.imagesDeleted.length} images`
     );
   };
-  useGroupSocket(groupId, onImagesUploaded, onImagesDeleted);
+
+  const onGroupLeft = (eventListenData) => {
+    showDefaultToast(eventListenData.message);
+  };
+
+  const onGroupDelete = (eventListenData) => {
+    console.log('I ma here');
+    navigate('/dashboard');
+    showDefaultToast(eventListenData.message);
+  };
+  useGroupSocket(
+    groupId,
+    onImagesUploaded,
+    onImagesDeleted,
+    onGroupLeft,
+    onGroupDelete
+  );
 
   const onMoreImages = (responseData) => {
     setCursor(responseData.nextCursor);
